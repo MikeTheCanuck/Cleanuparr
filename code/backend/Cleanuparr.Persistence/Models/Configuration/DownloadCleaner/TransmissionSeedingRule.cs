@@ -54,6 +54,12 @@ public sealed record TransmissionSeedingRule : ISeedingRule, ITagFilterable
     public double MaxSeedTime { get; set; } = -1;
 
     /// <summary>
+    /// Maximum number of days a torrent can be inactive before being removed.
+    /// -1 disables this check. Only supported for qBittorrent.
+    /// </summary>
+    public double MaxInactiveDays { get; set; } = -1;
+
+    /// <summary>
     /// Whether to delete the source files when cleaning the download.
     /// </summary>
     public bool DeleteSourceFiles { get; set; }
@@ -70,9 +76,9 @@ public sealed record TransmissionSeedingRule : ISeedingRule, ITagFilterable
             throw new ValidationException("At least one category must be specified");
         }
 
-        if (MaxRatio < 0 && MaxSeedTime < 0)
+        if (MaxRatio < 0 && MaxSeedTime < 0 && MaxInactiveDays < 0)
         {
-            throw new ValidationException("Either max ratio or max seed time must be set to a non-negative value");
+            throw new ValidationException("At least one of max ratio, max seed time, or max inactive days must be set to a non-negative value");
         }
 
         if (MinSeedTime < 0)

@@ -46,6 +46,8 @@ public sealed class DelugeItemWrapper : ITorrentItemWrapper
     
     public long SeedingTimeSeconds => Info.SeedingTime;
 
+    public DateTime? LastActivityTime => null;
+
     public string? Category
     {
         get => Info.Label;

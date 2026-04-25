@@ -26,6 +26,11 @@ public interface ITorrentItemWrapper
     
     long SeedingTimeSeconds { get; }
 
+    /// <summary>
+    /// The last time this torrent had activity. Null if not available for this client.
+    /// </summary>
+    DateTime? LastActivityTime { get; }
+
     string? Category { get; set; }
 
     string SavePath { get; }

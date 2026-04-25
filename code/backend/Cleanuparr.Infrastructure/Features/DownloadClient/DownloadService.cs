@@ -110,7 +110,7 @@ public abstract class DownloadService : IDownloadService
             SetDownloadClientContext();
 
             TimeSpan seedingTime = TimeSpan.FromSeconds(torrent.SeedingTimeSeconds);
-            SeedingCheckResult result = ShouldCleanDownload(torrent.Ratio, seedingTime, seedingRule);
+            SeedingCheckResult result = ShouldCleanDownload(torrent.Ratio, seedingTime, torrent.LastActivityTime, seedingRule);
 
             if (!result.ShouldClean)
             {
@@ -121,9 +121,12 @@ public abstract class DownloadService : IDownloadService
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | delete files: {deleteFiles} | {name}",
-                result.Reason is CleanReason.MaxRatioReached
-                    ? "MAX_RATIO & MIN_SEED_TIME"
-                    : "MAX_SEED_TIME",
+                result.Reason switch
+                {
+                    CleanReason.MaxRatioReached => "MAX_RATIO & MIN_SEED_TIME",
+                    CleanReason.InactivityLimitReached => "MAX_INACTIVE_DAYS",
+                    _ => "MAX_SEED_TIME",
+                },
                 seedingRule.DeleteSourceFiles,
                 torrent.Name
             );
@@ -149,7 +152,7 @@ public abstract class DownloadService : IDownloadService
     /// <param name="deleteSourceFiles">Whether to delete the source files along with the torrent</param>
     public abstract Task DeleteDownload(ITorrentItemWrapper torrent, bool deleteSourceFiles);
     
-    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, ISeedingRule category)
+    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, DateTime? lastActivityTime, ISeedingRule category)
     {
         // check ratio
         if (DownloadReachedRatio(ratio, seedingTime, category))
@@ -160,7 +163,7 @@ public abstract class DownloadService : IDownloadService
                 Reason = CleanReason.MaxRatioReached
             };
         }
-            
+
         // check max seed time
         if (DownloadReachedMaxSeedTime(seedingTime, category))
         {
@@ -168,6 +171,16 @@ public abstract class DownloadService : IDownloadService
             {
                 ShouldClean = true,
                 Reason = CleanReason.MaxSeedTimeReached
+            };
+        }
+
+        // check inactivity limit (qBittorrent only; other clients pass null)
+        if (DownloadExceededInactivityLimit(lastActivityTime, category))
+        {
+            return new()
+            {
+                ShouldClean = true,
+                Reason = CleanReason.InactivityLimitReached
             };
         }
 
@@ -226,10 +239,10 @@ public abstract class DownloadService : IDownloadService
         {
             return false;
         }
-        
+
         string downloadName = ContextProvider.Get<string>(ContextProvider.Keys.ItemName);
         TimeSpan maxSeedingTime = TimeSpan.FromHours(category.MaxSeedTime);
-        
+
         if (category.MaxSeedTime > 0 && seedingTime < maxSeedingTime)
         {
             _logger.LogDebug("skip | download has not reached MAX_SEED_TIME | {name}", downloadName);
@@ -237,6 +250,25 @@ public abstract class DownloadService : IDownloadService
         }
 
         // max seed time is 0 or reached
+        return true;
+    }
+
+    private bool DownloadExceededInactivityLimit(DateTime? lastActivityTime, ISeedingRule category)
+    {
+        if (category.MaxInactiveDays < 0 || lastActivityTime is null)
+        {
+            return false;
+        }
+
+        string downloadName = ContextProvider.Get<string>(ContextProvider.Keys.ItemName);
+        double inactiveDays = (DateTime.UtcNow - lastActivityTime.Value.ToUniversalTime()).TotalDays;
+
+        if (inactiveDays < category.MaxInactiveDays)
+        {
+            _logger.LogDebug("skip | download has not reached MAX_INACTIVE_DAYS | {name}", downloadName);
+            return false;
+        }
+
         return true;
     }
     

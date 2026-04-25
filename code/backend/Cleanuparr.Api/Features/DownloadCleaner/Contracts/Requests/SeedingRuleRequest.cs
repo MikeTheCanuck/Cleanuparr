@@ -59,6 +59,12 @@ public record SeedingRuleRequest
     public double MaxSeedTime { get; init; } = -1;
 
     /// <summary>
+    /// Maximum number of days a torrent can be inactive before being removed.
+    /// -1 disables this check. Only supported for qBittorrent.
+    /// </summary>
+    public double MaxInactiveDays { get; init; } = -1;
+
+    /// <summary>
     /// Whether to delete the source files when cleaning the download.
     /// </summary>
     public bool DeleteSourceFiles { get; init; } = true;

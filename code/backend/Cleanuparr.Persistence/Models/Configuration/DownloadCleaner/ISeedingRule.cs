@@ -39,5 +39,11 @@ public interface ISeedingRule : IConfig
 
     double MaxSeedTime { get; set; }
 
+    /// <summary>
+    /// Maximum number of days a torrent can be inactive before being removed.
+    /// -1 disables this check. Only supported for qBittorrent.
+    /// </summary>
+    double MaxInactiveDays { get; set; }
+
     bool DeleteSourceFiles { get; set; }
 }

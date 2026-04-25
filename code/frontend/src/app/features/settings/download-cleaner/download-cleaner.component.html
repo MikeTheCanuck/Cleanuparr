@@ -137,6 +137,9 @@
                         @if (rule.maxSeedTime >= 0) {
                           <app-badge>Max Seed: {{ rule.maxSeedTime }}h</app-badge>
                         }
+                        @if (rule.maxInactiveDays >= 0) {
+                          <app-badge>Max Inactive: {{ rule.maxInactiveDays }}d</app-badge>
+                        }
                         @if (rule.minSeedTime > 0) {
                           <app-badge>Min Seed: {{ rule.minSeedTime }}h</app-badge>
                         }
@@ -262,6 +265,9 @@
     <app-number-input label="Max Seed Time" [(value)]="ruleMaxSeedTime" suffix="hours" [min]="-1"
       hint="Maximum time to seed before removing (-1 means disabled)"
       helpKey="download-cleaner:maxSeedTime" />
+    <app-number-input label="Max Inactive Days" [(value)]="ruleMaxInactiveDays" suffix="days" [min]="-1"
+      hint="Remove torrent if inactive for this many days (-1 means disabled, qBittorrent only)"
+      helpKey="download-cleaner:maxInactiveDays" />
     @if (ruleDisabledError()) {
       <div class="category-error">{{ ruleDisabledError() }}</div>
     }

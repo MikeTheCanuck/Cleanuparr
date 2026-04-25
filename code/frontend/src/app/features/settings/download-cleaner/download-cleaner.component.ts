@@ -128,6 +128,7 @@ export class DownloadCleanerComponent implements OnInit, HasPendingChanges {
   readonly ruleMaxRatio = signal<number | null>(-1);
   readonly ruleMinSeedTime = signal<number | null>(0);
   readonly ruleMaxSeedTime = signal<number | null>(-1);
+  readonly ruleMaxInactiveDays = signal<number | null>(-1);
   readonly ruleDeleteSourceFiles = signal(true);
 
   readonly scheduleIntervalOptions = computed(() => {
@@ -171,8 +172,8 @@ export class DownloadCleanerComponent implements OnInit, HasPendingChanges {
   });
 
   readonly ruleDisabledError = computed(() => {
-    if ((this.ruleMaxRatio() ?? -1) < 0 && (this.ruleMaxSeedTime() ?? -1) < 0) {
-      return 'Both max ratio and max seed time cannot be disabled at the same time';
+    if ((this.ruleMaxRatio() ?? -1) < 0 && (this.ruleMaxSeedTime() ?? -1) < 0 && (this.ruleMaxInactiveDays() ?? -1) < 0) {
+      return 'At least one of max ratio, max seed time, or max inactive days must be set';
     }
     return undefined;
   });
@@ -267,6 +268,7 @@ export class DownloadCleanerComponent implements OnInit, HasPendingChanges {
       this.ruleMaxRatio.set(rule.maxRatio);
       this.ruleMinSeedTime.set(rule.minSeedTime);
       this.ruleMaxSeedTime.set(rule.maxSeedTime);
+      this.ruleMaxInactiveDays.set(rule.maxInactiveDays);
       this.ruleDeleteSourceFiles.set(rule.deleteSourceFiles);
     } else {
       this.ruleName.set('');
@@ -278,6 +280,7 @@ export class DownloadCleanerComponent implements OnInit, HasPendingChanges {
       this.ruleMaxRatio.set(-1);
       this.ruleMinSeedTime.set(0);
       this.ruleMaxSeedTime.set(-1);
+      this.ruleMaxInactiveDays.set(-1);
       this.ruleDeleteSourceFiles.set(true);
     }
     this.ruleModalVisible.set(true);
@@ -300,6 +303,7 @@ export class DownloadCleanerComponent implements OnInit, HasPendingChanges {
       maxRatio: this.ruleMaxRatio() ?? -1,
       minSeedTime: this.ruleMinSeedTime() ?? 0,
       maxSeedTime: this.ruleMaxSeedTime() ?? -1,
+      maxInactiveDays: this.ruleMaxInactiveDays() ?? -1,
       deleteSourceFiles: this.ruleDeleteSourceFiles(),
     };
 
