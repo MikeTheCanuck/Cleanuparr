@@ -184,10 +184,10 @@ public sealed class QBitSeedingRuleTests
 
     #endregion
 
-    #region Validate - MaxRatio and MaxSeedTime Validation
+    #region Validate - MaxRatio, MaxSeedTime, and MaxInactiveDays Validation
 
     [Fact]
-    public void Validate_WithBothNegative_ThrowsValidationException()
+    public void Validate_WithAllCleanupCriteriaDisabled_ThrowsValidationException()
     {
         var config = new QBitSeedingRule
         {
@@ -196,11 +196,12 @@ public sealed class QBitSeedingRuleTests
             MaxRatio = -1,
             MinSeedTime = 0,
             MaxSeedTime = -1,
+            MaxInactiveDays = -1,
             DeleteSourceFiles = true
         };
 
         var exception = Should.Throw<ValidationException>(() => config.Validate());
-        exception.Message.ShouldBe("Either max ratio or max seed time must be set to a non-negative value");
+        exception.Message.ShouldBe("At least one of max ratio, max seed time, or max inactive days must be set to a non-negative value");
     }
 
     [Theory]
@@ -216,11 +217,29 @@ public sealed class QBitSeedingRuleTests
             MaxRatio = maxRatio,
             MinSeedTime = 0,
             MaxSeedTime = maxSeedTime,
+            MaxInactiveDays = -1,
             DeleteSourceFiles = true
         };
 
         var exception = Should.Throw<ValidationException>(() => config.Validate());
-        exception.Message.ShouldBe("Either max ratio or max seed time must be set to a non-negative value");
+        exception.Message.ShouldBe("At least one of max ratio, max seed time, or max inactive days must be set to a non-negative value");
+    }
+
+    [Fact]
+    public void Validate_WithValidMaxInactiveDays_DoesNotThrow()
+    {
+        var config = new QBitSeedingRule
+        {
+            Name = "test-category",
+            Categories = ["test-category"],
+            MaxRatio = -1,
+            MinSeedTime = 0,
+            MaxSeedTime = -1,
+            MaxInactiveDays = 30,
+            DeleteSourceFiles = true
+        };
+
+        Should.NotThrow(() => config.Validate());
     }
 
     #endregion
